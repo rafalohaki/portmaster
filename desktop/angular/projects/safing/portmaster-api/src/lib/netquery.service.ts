@@ -1,14 +1,12 @@
 import { HttpClient, HttpParams, HttpResponse } from "@angular/common/http";
 import { Inject, Injectable } from "@angular/core";
 import { Observable, forkJoin, of } from "rxjs";
-import { catchError, map, mergeMap } from "rxjs/operators";
+import { catchError, map, mergeMap, shareReplay } from "rxjs/operators";
 import { AppProfileService } from "./app-profile.service";
 import { AppProfile } from "./app-profile.types";
 import { DNSContext, IPScope, Reason, TLSContext, TunnelContext, Verdict } from "./network.types";
 import { PORTMASTER_HTTP_API_ENDPOINT, PortapiService } from "./portapi.service";
 import { Container } from "postcss";
-import { catchError, map, mergeMap, shareReplay } from "rxjs/operators";
-
 
 export interface FieldSelect {
   field: string;
