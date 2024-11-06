@@ -7,6 +7,8 @@ import { AppProfile } from "./app-profile.types";
 import { DNSContext, IPScope, Reason, TLSContext, TunnelContext, Verdict } from "./network.types";
 import { PORTMASTER_HTTP_API_ENDPOINT, PortapiService } from "./portapi.service";
 import { Container } from "postcss";
+import { catchError, map, mergeMap, shareReplay } from "rxjs/operators";
+
 
 export interface FieldSelect {
   field: string;
@@ -234,45 +236,39 @@ export class Netquery {
     @Inject(PORTMASTER_HTTP_API_ENDPOINT) private httpAPI: string,
   ) { }
 
-  private forceSubscriptions = new Map<string, any>();
+  private forceSubscriptions = new Map<string, Observable<QueryResult[]>>();
 
   forceQuery(query: Query, origin: string): Observable<QueryResult[]> {
     const subKey = JSON.stringify({ query, origin });
     
     if (this.forceSubscriptions.has(subKey)) {
-      return this.forceSubscriptions.get(subKey);
-    }
+      return this.forceSubscriptions.get(subKey)!;
+    }  
 
     const forcedStream = new Observable<QueryResult[]>(observer => {
       const poll = () => {
         this.query(query, origin).subscribe({
           next: (results) => {
             observer.next(results);
-            // Immediately queue next poll
-            setTimeout(poll, 100); // Adjust timing as needed
+            setTimeout(poll, 100);
           },
           error: () => {
-            // On error, retry quickly
             setTimeout(poll, 100);
           }
         });
       };
-
-      // Start polling
+  
       poll();
-
-      // Cleanup function
       return () => {
         this.forceSubscriptions.delete(subKey);
       };
     }).pipe(
-      // Share the subscription so multiple subscribers get the same data
-      share()
+      shareReplay(1)
     );
-
+  
     this.forceSubscriptions.set(subKey, forcedStream);
     return forcedStream;
-  }
+  }  
 
   forceBandwidthChart<K extends ConnKeys>(query: Condition, groupBy?: K[], interval?: number): Observable<BandwidthChartResult<K>[]> {
     return new Observable<BandwidthChartResult<K>[]>(observer => {
@@ -287,9 +283,9 @@ export class Netquery {
       };
       
       poll();
-    }).pipe(share());
+    }).pipe(shareReplay(1));
   }
-
+  
   forceActiveConnectionChart(cond: Condition, textSearch?: TextSearch): Observable<ChartResult[]> {
     return new Observable<ChartResult[]>(observer => {
       const poll = () => {
@@ -303,8 +299,8 @@ export class Netquery {
       };
       
       poll();
-    }).pipe(share());
-  }
+    }).pipe(shareReplay(1));
+  }  
 
   forceProfileStats(query?: Condition): Observable<IProfileStats[]> {
     return new Observable<IProfileStats[]>(observer => {
@@ -319,8 +315,8 @@ export class Netquery {
       };
       
       poll();
-    }).pipe(share());
-  }
+    }).pipe(shareReplay(1));
+  }  
   
   query(query: Query, origin: string): Observable<QueryResult[]> {
     return this.http.post<{ results: QueryResult[] }>(`${this.httpAPI}/v1/netquery/query`, query, {
