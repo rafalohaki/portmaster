@@ -518,7 +518,7 @@ export class SfngNetqueryViewer implements OnInit, OnDestroy, AfterViewInit {
         query.page = page - 1; // UI starts at page 1 while the backend is 0-based
         query.pageSize = pageSize;
 
-        return this.netquery.query(query, 'netquery-viewer')
+        return this.netquery.forceQuery(query, 'netquery-viewer')
           .pipe(
             this.helper.attachProfile(),
             this.helper.attachPins(),
@@ -609,7 +609,7 @@ export class SfngNetqueryViewer implements OnInit, OnDestroy, AfterViewInit {
             filter(loading => !loading),
             take(1),
             switchMap(() => forkJoin({
-              connectionChart: this.netquery.activeConnectionChart(result.query.query!)
+              connectionChart: this.netquery.forceActiveConnectionChart(result.query.query!)
                 .pipe(
                   catchError(err => {
                     this.actionIndicator.error(
@@ -620,7 +620,7 @@ export class SfngNetqueryViewer implements OnInit, OnDestroy, AfterViewInit {
                     return of([] as ChartResult[]);
                   }),
                 ),
-              bwChart: this.netquery.bandwidthChart(result.query.query!, [], 60)
+              bwChart: this.netquery.forceBandwidthChart(result.query.query!, [], 60)
             })),
           )
           .subscribe(chart => {
@@ -815,7 +815,7 @@ export class SfngNetqueryViewer implements OnInit, OnDestroy, AfterViewInit {
   // expands it.
   lazyLoadGroup(groupFilter: Condition): Observable<DynamicItemsPaginator<NetqueryConnection>> {
     return new Observable(observer => {
-      this.netquery.query({
+      this.netquery.forceQuery({
         query: groupFilter,
         select: [
           { $count: { field: "*", as: "totalCount" } }
@@ -829,7 +829,7 @@ export class SfngNetqueryViewer implements OnInit, OnDestroy, AfterViewInit {
         .subscribe(result => {
           const paginator = new DynamicItemsPaginator<NetqueryConnection>({
             view: (pageNumber: number, pageSize: number) => {
-              return this.netquery.query({
+              return this.netquery.forceQuery({
                 query: groupFilter,
                 orderBy: [
                   { field: 'started', desc: true },
@@ -852,7 +852,7 @@ export class SfngNetqueryViewer implements OnInit, OnDestroy, AfterViewInit {
   // Returns an observable that loads the current active connection chart using the
   // current page query but only for the condition of the displayed group.
   getGroupChart(groupFilter: Condition): Observable<ChartResult[]> {
-    return this.netquery.activeConnectionChart(groupFilter)
+    return this.netquery.forceActiveConnectionChart(groupFilter)
   }
 
   // loadSuggestion loads possible values for a given connection field
@@ -866,7 +866,7 @@ export class SfngNetqueryViewer implements OnInit, OnDestroy, AfterViewInit {
 
     this.models[field]!.loading = !this.models[field]!.suggestions?.length;
 
-    this.netquery.query({
+    this.netquery.forceQuery({
       select: [
         field,
         {

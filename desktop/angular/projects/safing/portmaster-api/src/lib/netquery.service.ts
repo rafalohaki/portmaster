@@ -234,6 +234,94 @@ export class Netquery {
     @Inject(PORTMASTER_HTTP_API_ENDPOINT) private httpAPI: string,
   ) { }
 
+  private forceSubscriptions = new Map<string, any>();
+
+  forceQuery(query: Query, origin: string): Observable<QueryResult[]> {
+    const subKey = JSON.stringify({ query, origin });
+    
+    if (this.forceSubscriptions.has(subKey)) {
+      return this.forceSubscriptions.get(subKey);
+    }
+
+    const forcedStream = new Observable<QueryResult[]>(observer => {
+      const poll = () => {
+        this.query(query, origin).subscribe({
+          next: (results) => {
+            observer.next(results);
+            // Immediately queue next poll
+            setTimeout(poll, 100); // Adjust timing as needed
+          },
+          error: () => {
+            // On error, retry quickly
+            setTimeout(poll, 100);
+          }
+        });
+      };
+
+      // Start polling
+      poll();
+
+      // Cleanup function
+      return () => {
+        this.forceSubscriptions.delete(subKey);
+      };
+    }).pipe(
+      // Share the subscription so multiple subscribers get the same data
+      share()
+    );
+
+    this.forceSubscriptions.set(subKey, forcedStream);
+    return forcedStream;
+  }
+
+  forceBandwidthChart<K extends ConnKeys>(query: Condition, groupBy?: K[], interval?: number): Observable<BandwidthChartResult<K>[]> {
+    return new Observable<BandwidthChartResult<K>[]>(observer => {
+      const poll = () => {
+        this.bandwidthChart(query, groupBy, interval).subscribe({
+          next: (results) => {
+            observer.next(results);
+            setTimeout(poll, 100);
+          },
+          error: () => setTimeout(poll, 100)
+        });
+      };
+      
+      poll();
+    }).pipe(share());
+  }
+
+  forceActiveConnectionChart(cond: Condition, textSearch?: TextSearch): Observable<ChartResult[]> {
+    return new Observable<ChartResult[]>(observer => {
+      const poll = () => {
+        this.activeConnectionChart(cond, textSearch).subscribe({
+          next: (results) => {
+            observer.next(results);
+            setTimeout(poll, 100);
+          },
+          error: () => setTimeout(poll, 100)
+        });
+      };
+      
+      poll();
+    }).pipe(share());
+  }
+
+  forceProfileStats(query?: Condition): Observable<IProfileStats[]> {
+    return new Observable<IProfileStats[]>(observer => {
+      const poll = () => {
+        this.getProfileStats(query).subscribe({
+          next: (results) => {
+            observer.next(results);
+            setTimeout(poll, 100);
+          },
+          error: () => setTimeout(poll, 100)
+        });
+      };
+      
+      poll();
+    }).pipe(share());
+  }
+  
   query(query: Query, origin: string): Observable<QueryResult[]> {
     return this.http.post<{ results: QueryResult[] }>(`${this.httpAPI}/v1/netquery/query`, query, {
       params: new HttpParams().set("origin", origin)

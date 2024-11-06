@@ -207,7 +207,7 @@ export class MapService {
   }
 
   getPinIDsWithActiveConnections() {
-    return this.netquery.query({
+    return this.netquery.forceQuery({
       select: ['exit_node'],
       groupBy: ['exit_node'],
       query: {

@@ -47,7 +47,7 @@ export class PinDetailsComponent implements OnInit, OnChanges, OnDestroy {
         switchMap(([pin, allPins]) => forkJoin({
           pin: of(pin),
           allPins: of(allPins),
-          exitConnections: this.netquery.query({
+          exitConnections: this.netquery.forceQuery({
             select: [
               { $count: { field: '*', as: 'totalCount', } },
             ],

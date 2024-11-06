@@ -83,7 +83,7 @@ export class ExtDomainListComponent implements OnInit {
       .forEach(obj => {
         this.requests.push(obj)
 
-        this.netquery.query({
+        this.netquery.forceQuery({
           query: {
             domain: obj.domain,
           },

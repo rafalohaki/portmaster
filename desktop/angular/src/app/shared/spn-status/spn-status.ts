@@ -89,8 +89,8 @@ export class SPNStatusComponent implements OnInit {
         startWith(-1),
         takeUntilDestroyed(this.destroyRef),
         switchMap(() => forkJoin({
-          chart: this.netquery.activeConnectionChart({ tunneled: { $eq: true } }),
-          identities: this.netquery.query({
+          chart: this.netquery.forceActiveConnectionChart({ tunneled: { $eq: true } }),
+          identities: this.netquery.forceQuery({
             query: { tunneled: { $eq: true }, exit_node: { $ne: "" } },
             groupBy: ['exit_node'],
             select: [

@@ -71,7 +71,7 @@ export class AppInsightsComponent implements OnInit {
         this.cdr.markForCheck();
       })
 
-    this.netquery.activeConnectionChart({ profile: key })
+    this.netquery.forceActiveConnectionChart({ profile: key })
       .pipe(
         repeat({ delay: 10000 }),
         takeUntilDestroyed(this.destroyRef)
@@ -81,7 +81,7 @@ export class AppInsightsComponent implements OnInit {
         this.cdr.markForCheck();
       })
 
-    this.netquery.bandwidthChart({ profile: key }, undefined, 60)
+    this.netquery.forceBandwidthChart({ profile: key }, undefined, 60)
       .pipe(
         repeat({ delay: 10000 }),
         takeUntilDestroyed(this.destroyRef)

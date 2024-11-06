@@ -243,7 +243,7 @@ export class NetworkScoutComponent implements OnInit {
 
             updateInProgress = true
 
-            return this.netquery.getProfileStats(query)
+            return this.netquery.forceProfileStats(query)
               .pipe(
                 finalize(() => updateInProgress = false)
               )

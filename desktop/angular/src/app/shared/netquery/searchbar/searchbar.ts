@@ -212,7 +212,7 @@ export class SfngNetquerySearchbarComponent implements ControlValueAccessor, OnI
               }
             }
 
-            const obs = this.netquery.query({
+            const obs = this.netquery.forceQuery({
               select: [
                 field,
                 {
